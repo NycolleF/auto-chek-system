@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro de Veiculo - AutoCheck Manager</title>
+    <link rel="stylesheet" href="../styles.css" />
+</head>
+
+<body>
+    <main class="shell layout">
+        <section class="card split">
+            <div>
+                <div id="top-nav"></div>
+                <div class="page-head">
+                    <div>
+                        <h2>Cadastro de Veiculo</h2>
+                        <p class="hint">Todo veiculo precisa estar vinculado a um cliente (RN02).</p>
+                    </div>
+                    <span class="tag">Passo 2 de 3</span>
+                </div>
+
+                <form id="veiculo-form">
+                    <div class="grid-2">
+                        <label>Placa
+                            <input type="text" id="placa" required maxlength="8" />
+                        </label>
+                        <label>Cliente
+                            <select id="cliente-id" required></select>
+                        </label>
+                    </div>
+
+                    <div class="grid-2">
+                        <label>Marca
+                            <input type="text" id="marca" required />
+                        </label>
+                        <label>Modelo
+                            <input type="text" id="modelo" required />
+                        </label>
+                    </div>
+
+                    <div class="grid-2">
+                        <label>Ano
+                            <input type="number" id="ano" min="1950" max="2099" required />
+                        </label>
+                        <label>Cor
+                            <input type="text" id="cor" required />
+                        </label>
+                    </div>
+
+                    <label>Quilometragem
+                        <input type="number" id="km" min="0" required />
+                    </label>
+
+                    <button class="btn primary" type="submit">Salvar Veiculo</button>
+                    <div id="msg"></div>
+                </form>
+            </div>
+
+            <aside class="card">
+                <h2>Boas praticas</h2>
+                <ul class="list">
+                    <li>Placa e padronizada automaticamente.</li>
+                    <li>Placas duplicadas sao bloqueadas.</li>
+                    <li>Mantenha KM atualizado para revisoes.</li>
+                </ul>
+            </aside>
+        </section>
+
+        <section class="card">
+            <div class="list-head">
+                <h2>Veiculos Cadastrados</h2>
+                <span id="veiculos-count" class="count-badge">0 registros</span>
+            </div>
+            <ul id="veiculos-lista" class="list"></ul>
+        </section>
+    </main>
+
+    <script src="../app.js"></script>
+    <script>
+        document.getElementById("top-nav").innerHTML = buildTopNav("veiculo");
+        initTheme();
+        populateClientsSelect("cliente-id");
+
+        function updateCount() {
+            const total = getData(DB_KEYS.vehicles).length;
+            document.getElementById("veiculos-count").textContent = `${total} ${total === 1 ? "registro" : "registros"}`;
+        }
+
+        document.getElementById("veiculo-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const vehicles = getData(DB_KEYS.vehicles);
+            const plateRaw = document.getElementById("placa").value.trim();
+            const plate = formatPlate(plateRaw);
+
+            if (!plate) {
+                showMessage("msg", "Informe uma placa valida.", "error");
+                return;
+            }
+
+            const duplicatedPlate = vehicles.some(v => v.placa === plate);
+            if (duplicatedPlate) {
+                showMessage("msg", "Placa ja cadastrada no sistema.", "error");
+                return;
+            }
+
+            const clientId = document.getElementById("cliente-id").value;
+            if (!clientId) {
+                showMessage("msg", "Selecione o cliente do veiculo.", "error");
+                return;
+            }
+
+            const newVehicle = {
+                id: Date.now(),
+                placa: plate,
+                marca: document.getElementById("marca").value.trim(),
+                modelo: document.getElementById("modelo").value.trim(),
+                ano: Number(document.getElementById("ano").value),
+                cor: document.getElementById("cor").value.trim(),
+                km: Number(document.getElementById("km").value),
+                clienteId: Number(clientId)
+            };
+
+            vehicles.push(newVehicle);
+            setData(DB_KEYS.vehicles, vehicles);
+            this.reset();
+            showMessage("msg", "Veiculo cadastrado com sucesso.", "ok");
+            renderVehiclesList("veiculos-lista");
+            updateCount();
+        });
+
+        renderVehiclesList("veiculos-lista");
+        updateCount();
+    </script>
+</body>
+
+</html>

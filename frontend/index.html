@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AutoCheck Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <main class="shell">
+        <div class="home-topbar">
+            <span class="tag">Tema da interface</span>
+            <button class="btn ghost" type="button" data-theme-toggle onclick="toggleTheme()">Modo Escuro</button>
+        </div>
+
+        <section class="hero card">
+            <span class="badge">Sistema de Gestao para Oficina</span>
+            <h1>AutoCheck Manager</h1>
+            <p>Fluxo inicial da oficina em uma interface mais clara: primeiro cliente, depois veiculo, e por fim
+                abertura de OS.</p>
+            <div class="actions">
+                <a class="btn primary" href="pages/cadastro-cliente.html">Cadastrar Cliente</a>
+                <a class="btn" href="pages/cadastro-veiculo.html">Cadastrar Veiculo</a>
+                <a class="btn" href="pages/abrir-os.html">Abrir OS</a>
+            </div>
+
+            <div class="stats">
+                <article class="stat">
+                    <strong>1</strong>
+                    <span>Cadastro de Cliente</span>
+                </article>
+                <article class="stat">
+                    <strong>2</strong>
+                    <span>Cadastro de Veiculo</span>
+                </article>
+                <article class="stat">
+                    <strong>3</strong>
+                    <span>Abertura de OS</span>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        initTheme();
+    </script>
+</body>
+
+</html>

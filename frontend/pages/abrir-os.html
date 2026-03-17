@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Abertura de OS - AutoCheck Manager</title>
+    <link rel="stylesheet" href="../styles.css" />
+</head>
+
+<body>
+    <main class="shell layout">
+        <section class="card split">
+            <div>
+                <div id="top-nav"></div>
+                <div class="page-head">
+                    <div>
+                        <h2>Abertura de Ordem de Servico</h2>
+                        <p class="hint">Numero da OS e gerado automaticamente para manter rastreabilidade.</p>
+                    </div>
+                    <span class="tag">Passo 3 de 3</span>
+                </div>
+
+                <form id="os-form">
+                    <div class="grid-2">
+                        <label>Numero da OS
+                            <input type="text" id="numero-os" readonly />
+                        </label>
+                        <label>Data de entrada
+                            <input type="datetime-local" id="data-entrada" required />
+                        </label>
+                    </div>
+
+                    <div class="grid-2">
+                        <label>Cliente
+                            <select id="cliente-id" required></select>
+                        </label>
+                        <label>Veiculo
+                            <select id="veiculo-id" required></select>
+                        </label>
+                    </div>
+
+                    <label>Status
+                        <select id="status" required>
+                            <option>Aguardando diagnostico</option>
+                            <option>Em diagnostico</option>
+                            <option>Aguardando aprovacao</option>
+                            <option>Em reparo</option>
+                            <option>Finalizado</option>
+                            <option>Entregue</option>
+                        </select>
+                    </label>
+
+                    <label>Problema relatado
+                        <textarea id="problema-relato" required></textarea>
+                    </label>
+
+                    <button class="btn primary" type="submit">Abrir OS</button>
+                    <div id="msg"></div>
+                </form>
+            </div>
+
+            <aside class="card">
+                <h2>Regras aplicadas</h2>
+                <ul class="list">
+                    <li>RN01: nao permite duas OS abertas para o mesmo veiculo.</li>
+                    <li>Numeracao sequencial no formato OS-ANO-XXXXXX.</li>
+                    <li>Filtro de veiculo por cliente selecionado.</li>
+                </ul>
+            </aside>
+        </section>
+
+        <section class="card">
+            <div class="list-head">
+                <h2>Ordens de Servico</h2>
+                <span id="os-count" class="count-badge">0 registros</span>
+            </div>
+            <ul id="os-lista" class="list"></ul>
+        </section>
+    </main>
+
+    <script src="../app.js"></script>
+    <script>
+        document.getElementById("top-nav").innerHTML = buildTopNav("os");
+        initTheme();
+
+        function updateCount() {
+            const total = getData(DB_KEYS.serviceOrders).length;
+            document.getElementById("os-count").textContent = `${total} ${total === 1 ? "registro" : "registros"}`;
+        }
+
+        function refreshNumber() {
+            document.getElementById("numero-os").value = previewNextOsNumber();
+        }
+
+        function setCurrentDate() {
+            const now = new Date();
+            const localISO = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+                .toISOString()
+                .slice(0, 16);
+            document.getElementById("data-entrada").value = localISO;
+        }
+
+        populateClientsSelect("cliente-id");
+        populateVehiclesSelect("veiculo-id");
+        setCurrentDate();
+        refreshNumber();
+
+        document.getElementById("cliente-id").addEventListener("change", function () {
+            populateVehiclesSelect("veiculo-id", this.value);
+        });
+
+        document.getElementById("os-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const vehicleId = document.getElementById("veiculo-id").value;
+            if (!vehicleId) {
+                showMessage("msg", "Selecione um veiculo.", "error");
+                return;
+            }
+
+            const activeOrders = getActiveOrdersForVehicle(vehicleId);
+            if (activeOrders.length > 0) {
+                showMessage("msg", "RN01: este veiculo ja possui OS aberta.", "error");
+                return;
+            }
+
+            const orders = getData(DB_KEYS.serviceOrders);
+            const newOrder = {
+                id: Date.now(),
+                numeroOs: consumeNextOsNumber(),
+                dataEntrada: document.getElementById("data-entrada").value,
+                status: document.getElementById("status").value,
+                clienteId: Number(document.getElementById("cliente-id").value),
+                veiculoId: Number(vehicleId),
+                problemaRelato: document.getElementById("problema-relato").value.trim()
+            };
+
+            orders.push(newOrder);
+            setData(DB_KEYS.serviceOrders, orders);
+
+            const form = document.getElementById("os-form");
+            form.reset();
+            setCurrentDate();
+            refreshNumber();
+            populateClientsSelect("cliente-id");
+            populateVehiclesSelect("veiculo-id");
+            showMessage("msg", "OS aberta com sucesso.", "ok");
+            renderOrdersList("os-lista");
+            updateCount();
+        });
+
+        renderOrdersList("os-lista");
+        updateCount();
+    </script>
+</body>
+
+</html>
