@@ -92,13 +92,23 @@ function getVehicleLabelById(vehicleId) {
     return vehicle ? `${vehicle.placa} - ${vehicle.marca} ${vehicle.modelo}` : "Veiculo nao encontrado";
 }
 
+// Evita que textos digitados pelo usuario sejam interpretados como HTML (protecao contra XSS)
+function escapeHtml(valor) {
+    return String(valor ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
 function renderClientsList(targetId) {
     const ul = document.getElementById(targetId);
     if (!ul) return;
 
     const clients = getData(DB_KEYS.clients);
     ul.innerHTML = clients.length
-        ? clients.map(c => `<li><strong>${c.nome}</strong><br>${c.telefone} | ${c.email || "sem email"}</li>`).join("")
+        ? clients.map(c => `<li><strong>${escapeHtml(c.nome)}</strong><br>${escapeHtml(c.telefone)} | ${escapeHtml(c.email || "sem email")}</li>`).join("")
         : "<li>Nenhum cliente cadastrado.</li>";
 }
 
@@ -110,8 +120,8 @@ function renderVehiclesList(targetId) {
     ul.innerHTML = vehicles.length
         ? vehicles.map(v => `
                         <li>
-                            <strong>${v.placa}</strong> - ${v.marca} ${v.modelo} (${v.ano})<br>
-                            Cliente: ${getClientNameById(v.clienteId)} | KM: ${v.km}
+                            <strong>${escapeHtml(v.placa)}</strong> - ${escapeHtml(v.marca)} ${escapeHtml(v.modelo)} (${escapeHtml(v.ano)})<br>
+                            Cliente: ${escapeHtml(getClientNameById(v.clienteId))} | KM: ${escapeHtml(v.km)}
                         </li>
                     `).join("")
         : "<li>Nenhum veiculo cadastrado.</li>";
@@ -123,7 +133,7 @@ function populateClientsSelect(selectId) {
 
     const clients = getData(DB_KEYS.clients);
     select.innerHTML = "<option value=''>Selecione...</option>" +
-        clients.map(c => `<option value='${c.id}'>${c.nome} (ID ${c.id})</option>`).join("");
+        clients.map(c => `<option value='${escapeHtml(c.id)}'>${escapeHtml(c.nome)} (ID ${escapeHtml(c.id)})</option>`).join("");
 }
 
 function populateVehiclesSelect(selectId, clientId) {
@@ -134,7 +144,7 @@ function populateVehiclesSelect(selectId, clientId) {
         .filter(v => !clientId || String(v.clienteId) === String(clientId));
 
     select.innerHTML = "<option value=''>Selecione...</option>" +
-        vehicles.map(v => `<option value='${v.id}'>${v.placa} - ${v.marca} ${v.modelo}</option>`).join("");
+        vehicles.map(v => `<option value='${escapeHtml(v.id)}'>${escapeHtml(v.placa)} - ${escapeHtml(v.marca)} ${escapeHtml(v.modelo)}</option>`).join("");
 }
 
 function getActiveOrdersForVehicle(vehicleId) {
@@ -158,10 +168,10 @@ function renderOrdersList(targetId) {
     ul.innerHTML = orders.length
         ? orders.map(os => `
                         <li>
-                            <strong>${os.numeroOs}</strong><br>
-                            Status: ${os.status}<br>
-                            Cliente: ${getClientNameById(os.clienteId)}<br>
-                            Veiculo: ${getVehicleLabelById(os.veiculoId)}
+                            <strong>${escapeHtml(os.numeroOs)}</strong><br>
+                            Status: ${escapeHtml(os.status)}<br>
+                            Cliente: ${escapeHtml(getClientNameById(os.clienteId))}<br>
+                            Veiculo: ${escapeHtml(getVehicleLabelById(os.veiculoId))}
                         </li>
                     `).join("")
         : "<li>Nenhuma OS aberta.</li>";
